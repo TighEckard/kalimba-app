@@ -18,8 +18,9 @@ app.add_middleware(
 )
 
 # Twilio credentials – (for production, load these from environment variables)
-TWILIO_ACCOUNT_SID = "AC2db3da2359ec7eea8ec8e63bdf06de42"
-TWILIO_AUTH_TOKEN = "646b6f437a5879042d89fc05e1158f82"
+TWILIO_ACCOUNT_SID = "AC2db3da2359ec7eea8ec8e63bdf06de42"  # Live Account SID
+TWILIO_AUTH_TOKEN = "646b6f437a5879042d89fc05e1158f82"  # Live Auth Token
+
 
 # Base domain used in your voice webhook URL (must be SSL-enabled)
 BASE_DOMAIN = "kalimba.world"
