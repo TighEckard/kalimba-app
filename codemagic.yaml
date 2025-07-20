@@ -2,14 +2,16 @@ workflows:
   ios_app_store:
     name: iOS App Store Build
     max_build_duration: 60
+
     environment:
       vars:
         APP_IDENTIFIER: com.kalimba.airec
         APP_NAME: Kalimba
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
+        # APPLE_TEAM_ID is provided in the secure group below
       groups:
-        - app_store_connect
+        - app_store_connect      # contains ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY, APPLE_TEAM_ID
 
     scripts:
       - name: Install dependencies
@@ -25,14 +27,19 @@ workflows:
           xcodebuild -workspace $XCODE_WORKSPACE \
             -scheme $XCODE_SCHEME \
             -configuration Release \
-            -archivePath $CM_BUILD_DIR/App.xcarchive archive
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
+            CODE_SIGN_STYLE=Automatic \
+            archive
 
       - name: Export IPA
         script: |
           xcodebuild -exportArchive \
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             -exportOptionsPlist $CM_SOURCE_DIR/ExportOptions.plist \
-            -exportPath $CM_BUILD_DIR/build
+            -exportPath $CM_BUILD_DIR/build \
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
+            CODE_SIGN_STYLE=Automatic
 
     artifacts:
       - build/*.ipa
