@@ -43,5 +43,4 @@ workflows:
         api_key: $ASC_KEY
         key_id: $ASC_KEY_ID
         issuer_id: $ASC_ISSUER_ID
-        team_id: $APPLE_TEAM_ID
         submit_to_testflight: true
