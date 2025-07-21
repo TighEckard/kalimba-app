@@ -19,8 +19,6 @@ workflows:
           cd ios/App
           pod install
 
-
-          
       - name: Debug signing assets
         script: |
           echo "🔑 Keychain identities:"
