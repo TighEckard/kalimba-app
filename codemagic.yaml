@@ -19,6 +19,16 @@ workflows:
           cd ios/App
           pod install
 
+
+          
+      - name: Debug signing assets
+        script: |
+          echo "🔑 Keychain identities:"
+          security find-identity -v -p codesigning || true
+          echo ""
+          echo "📱 Provisioning profiles on runner:"
+          ls -l ~/Library/MobileDevice/Provisioning\ Profiles || true
+
       - name: Archive Xcode project
         script: |
           cd ios/App
