@@ -28,9 +28,9 @@ workflows:
             -scheme $XCODE_SCHEME \
             -configuration Release \
             -archivePath $CM_BUILD_DIR/App.xcarchive \
-            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
-            CODE_SIGN_STYLE=Automatic \
-            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=Q9YK4JBX2Q \
+            PROVISIONING_PROFILE_SPECIFIER="Kalimba_Receptionist_App" \
             archive
 
       - name: Export IPA
@@ -39,8 +39,8 @@ workflows:
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             -exportOptionsPlist $CM_SOURCE_DIR/ExportOptions.plist \
             -exportPath $CM_BUILD_DIR/build \
-            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
-            CODE_SIGN_STYLE=Automatic
+            DEVELOPMENT_TEAM=Q9YK4JBX2Q
+ 
 
     artifacts:
       - build/*.ipa
