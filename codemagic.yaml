@@ -30,7 +30,7 @@ workflows:
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=Q9YK4JBX2Q \
-            PROVISIONING_PROFILE_SPECIFIER="Kalimba_Receptionist_App" \
+            PROVISIONING_PROFILE_SPECIFIER="Kalimba Provision" \
             archive
 
       - name: Export IPA
