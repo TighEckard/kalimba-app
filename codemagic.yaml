@@ -3,27 +3,14 @@ workflows:
     name: iOS App Store Build
     max_build_duration: 60
 
-    #––– 1A. make Codemagic download the cert + profile –––––––
-    code_signing:
-      certificates:
-        - certificate_name: ios_distribution.p12      # exact display name in Codemagic UI
-          certificate_password: ""                    # blank because you exported with no passphrase
-      provisioning_profiles:
-        - Kalimba_Receptionist_App.mobileprovision    # exact display name in Codemagic UI
-
-    #––– 1B. environment ––––––––––––––––––––––––––––––––––––––
     environment:
       vars:
         APP_IDENTIFIER: kalimba.world
         APP_NAME: Kalimba
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
-        APPLE_TEAM_ID: Q9YK4JBX2Q            # already in your application variables
-        PROFILE_UUID: 6937f392-814c-4fcc-9e1f-c91a478bca10   # <-- copy‑pasted from your plist
-      node: 20                                # optional: fix Node version
-      xcode: latest                           # or 16.4 specifically
+        APPLE_TEAM_ID: Q9YK4JBX2Q
 
-    #––– 1C. scripts ––––––––––––––––––––––––––––––––––––––––––
     scripts:
       - name: Install dependencies
         script: |
@@ -32,24 +19,15 @@ workflows:
           cd ios/App
           pod install
 
-      - name: Inspect signing assets   # << keep for one run, then delete
-        script: |
-          echo "🔑  Keychain identities:"
-          security find-identity -v -p codesigning
-          echo "📱  Installed profiles:"
-          ls -l ~/Library/MobileDevice/Provisioning\ Profiles
-
       - name: Archive Xcode project
         script: |
           cd ios/App
           xcodebuild -workspace $XCODE_WORKSPACE \
             -scheme $XCODE_SCHEME \
             -configuration Release \
-            -archivePath $CM_BUILD_DIR/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
             PRODUCT_BUNDLE_IDENTIFIER=$APP_IDENTIFIER \
-            PROVISIONING_PROFILE=$PROFILE_UUID \
             archive
 
       - name: Export IPA
@@ -58,8 +36,7 @@ workflows:
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             -exportOptionsPlist $CM_SOURCE_DIR/ExportOptions.plist \
             -exportPath $CM_BUILD_DIR/build \
-            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
-            PROVISIONING_PROFILE=$PROFILE_UUID
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID
 
     artifacts:
       - build/*.ipa
