@@ -30,7 +30,7 @@ workflows:
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=Q9YK4JBX2Q \
-            PROVISIONING_PROFILE_SPECIFIER="6937f392-814c-4fcc-9e1f-c91a478bca10" \
+            PROVISIONING_PROFILE_SPECIFIER="Kalimba Receptionist App" \
             archive
 
 
