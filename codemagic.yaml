@@ -9,9 +9,9 @@ workflows:
         APP_NAME: Kalimba
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
-        # APPLE_TEAM_ID is provided in the secure group below
-      groups:
-        - app_store_connect      # contains ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY, APPLE_TEAM_ID
+      # we’re using app‑level vars, not groups
+      # make sure ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY, and APPLE_TEAM_ID
+      # are all defined under Application environment variables in Codemagic
 
     scripts:
       - name: Install dependencies
@@ -30,6 +30,7 @@ workflows:
             -archivePath $CM_BUILD_DIR/App.xcarchive \
             DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
             CODE_SIGN_STYLE=Automatic \
+            -allowProvisioningUpdates \
             archive
 
       - name: Export IPA
