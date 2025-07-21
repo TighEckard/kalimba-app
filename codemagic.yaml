@@ -5,7 +5,7 @@ workflows:
 
     environment:
       vars:
-        APP_IDENTIFIER: com.kalimba.airec
+        APP_IDENTIFIER: kalimba.world
         APP_NAME: Kalimba
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
