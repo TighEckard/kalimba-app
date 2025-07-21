@@ -9,7 +9,7 @@ workflows:
         APP_NAME: Kalimba
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
-        APPLE_TEAM_ID: Q9YK4JBX2Q   # <- your team ID
+        APPLE_TEAM_ID: Q9YK4JBX2Q
 
     scripts:
       - name: Install dependencies
@@ -25,9 +25,11 @@ workflows:
           xcodebuild -workspace $XCODE_WORKSPACE \
             -scheme $XCODE_SCHEME \
             -configuration Release \
-            CODE_SIGN_STYLE=Automatic \
+            -archivePath $CM_BUILD_DIR/App.xcarchive \
+            CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
             PRODUCT_BUNDLE_IDENTIFIER=$APP_IDENTIFIER \
+            PROVISIONING_PROFILE_SPECIFIER="Kalimba Receptionist App" \
             archive
 
       - name: Export IPA
