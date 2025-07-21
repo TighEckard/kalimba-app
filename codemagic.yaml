@@ -9,7 +9,7 @@ workflows:
         APP_NAME: Kalimba
         XCODE_WORKSPACE: App.xcworkspace
         XCODE_SCHEME: App
-        APPLE_TEAM_ID: Q9YK4JBX2Q
+        APPLE_TEAM_ID: Q9YK4JBX2Q   # <- your team ID
 
     scripts:
       - name: Install dependencies
