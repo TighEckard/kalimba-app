@@ -33,6 +33,7 @@ workflows:
             PROVISIONING_PROFILE_SPECIFIER="Kalimba Provision" \
             archive
 
+
       - name: Export IPA
         script: |
           xcodebuild -exportArchive \
