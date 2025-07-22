@@ -1,1 +1,70 @@
+name: Build iOS Archive
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  archive:
+    runs-on: macos-latest
+    env:
+      APPLE_TEAM_ID: Q9YK4JBX2Q
+      APP_IDENTIFIER: kalimba.world
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install npm deps & sync Capacitor
+        run: |
+          npm ci
+          npx cap sync ios
+
+      - name: Install CocoaPods deps
+        run: |
+          cd ios/App
+          pod install
+
+      - name: Decode & install signing assets
+        run: |
+          echo "$P12_BASE64" | base64 --decode > dist.p12
+          security import dist.p12 \
+            -k ~/Library/Keychains/login.keychain-db \
+            -P "$P12_PASSWORD" \
+            -T /usr/bin/codesign
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$MOBILEPROVISION_BASE64" \
+            | base64 --decode \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/kalimba.mobileprovision
+
+      - name: Archive with xcodebuild
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $PWD/build/App.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
+            PROVISIONING_PROFILE_SPECIFIER="Kalimba Receptionist App" \
+            archive
+
+      - name: Export IPA
+        run: |
+          cd ios/App
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Kalimba.ipa
+          path: ios/App/build/*.ipa
