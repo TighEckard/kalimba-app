@@ -32,17 +32,21 @@ jobs:
 
       - name: Decode & install signing assets
         run: |
-          # import .p12 (no password flag)
+          # decode .p12 and import (explicit empty password)
           echo "$P12_BASE64" | base64 --decode > dist.p12
           security import dist.p12 \
-            -k ~/Library/Keychains/login.keychain-db \
+            -k "$HOME/Library/Keychains/login.keychain-db" \
+            -P "" \
+            -A \
             -T /usr/bin/codesign
+          echo "✅ certificate imported"
 
           # install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           echo "$MOBILEPROVISION_BASE64" \
             | base64 --decode \
-            > ~/Library/MobileDevice/Provisioning\ Profiles/kalimba.mobileprovision
+            > "$HOME/Library/MobileDevice/Provisioning Profiles/kalimba.mobileprovision"
+          echo "✅ provisioning profile installed"
 
       - name: Archive with xcodebuild
         run: |
