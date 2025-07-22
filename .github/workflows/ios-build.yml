@@ -1,8 +1,6 @@
-name: Build iOS Archive
+name: Build iOS Archive – debug cert
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -15,61 +13,52 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node & pods
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      - name: Install npm deps & sync Capacitor
-        run: |
+      - run: |
           npm ci
           npx cap sync ios
+      - run: |
+          cd ios/App && pod install
 
-      - name: Install CocoaPods deps
+      # ───────────────────────────────────────────────────────────────
+      - name: 🔍 P12 debug info
+        id: p12dbg
         run: |
-          cd ios/App
-          pod install
+          echo "::group::Print first/last bytes of secret"
+          echo "$P12_BASE64" | head -c 32 ; echo " … "
+          echo "$P12_BASE64" | tail -c 32
+          echo "::endgroup::"
 
-      - name: Decode & install signing assets
-        run: |
-          # decode .p12 and import (explicit empty password)
           echo "$P12_BASE64" | base64 --decode > dist.p12
-          security import dist.p12 \
-            -k "$HOME/Library/Keychains/login.keychain-db" \
-            -P "" \
-            -A \
-            -T /usr/bin/codesign
-          echo "✅ certificate imported"
+          echo "::group::File details"
+          ls -l dist.p12
+          shasum -a 1 dist.p12
+          echo "::endgroup::"
 
-          # install provisioning profile
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          echo "$MOBILEPROVISION_BASE64" \
-            | base64 --decode \
-            > "$HOME/Library/MobileDevice/Provisioning Profiles/kalimba.mobileprovision"
-          echo "✅ provisioning profile installed"
+          echo "::group::OpenSSL inspect"
+          openssl pkcs12 -in dist.p12 -nokeys -info -passin pass: || true
+          echo "::endgroup::"
 
-      - name: Archive with xcodebuild
+      # ───────────────────────────────────────────────────────────────
+      - name: 🔐 Try import
         run: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath $PWD/build/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=$APPLE_TEAM_ID \
-            PROVISIONING_PROFILE_SPECIFIER="Kalimba Receptionist App" \
-            archive
+          set -e
+          echo "Attempt import with empty passphrase…"
+          if security import dist.p12 -k "$HOME/Library/Keychains/login.keychain-db" -P "" -A -T /usr/bin/codesign ; then
+            echo "✅ imported with empty password"
+          elif [ -n "$P12_PASSWORD" ]; then
+            echo "Retrying with P12_PASSWORD secret…"
+            security import dist.p12 -k "$HOME/Library/Keychains/login.keychain-db" -P "$P12_PASSWORD" -A -T /usr/bin/codesign
+            echo "✅ imported with P12_PASSWORD"
+          else
+            echo "❌  import failed with both empty and blank password" >&2
+            exit 1
+          fi
 
-      - name: Export IPA
-        run: |
-          cd ios/App
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath build
-
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kalimba.ipa
-          path: ios/App/build/*.ipa
+      # stop after proving import so we don’t waste time
+      - name: Done
+        run: echo "Stop here once import works; then re‑enable the build steps."
