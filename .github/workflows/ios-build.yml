@@ -9,10 +9,8 @@ jobs:
   archive:
     runs-on: macos-latest
     env:
-      # static values
       APPLE_TEAM_ID: Q9YK4JBX2Q
       APP_IDENTIFIER: kalimba.world
-      # ⬇️  wire GitHub secrets into env vars the script can read
       P12_BASE64: ${{ secrets.P12_BASE64 }}
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
       MOBILEPROVISION_BASE64: ${{ secrets.MOBILEPROVISION_BASE64 }}
@@ -37,14 +35,21 @@ jobs:
 
       - name: Decode & install signing assets
         run: |
-          # import .p12 (pass empty password flag)
           echo "$P12_BASE64" | base64 --decode > dist.p12
-          security import dist.p12 \
-            -k "$HOME/Library/Keychains/login.keychain-db" \
-            -P "$P12_PASSWORD" \
-            -A -T /usr/bin/codesign
 
-          # install provisioning profile
+          if [ -z "$P12_PASSWORD" ]; then
+            echo "🔑 Importing .p12 with **no** password flag"
+            security import dist.p12 \
+              -k "$HOME/Library/Keychains/login.keychain-db" \
+              -A -T /usr/bin/codesign
+          else
+            echo "🔑 Importing .p12 with provided password"
+            security import dist.p12 \
+              -k "$HOME/Library/Keychains/login.keychain-db" \
+              -P "$P12_PASSWORD" \
+              -A -T /usr/bin/codesign
+          fi
+
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           echo "$MOBILEPROVISION_BASE64" \
             | base64 --decode \
