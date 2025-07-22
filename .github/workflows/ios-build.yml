@@ -13,37 +13,44 @@ jobs:
       APP_IDENTIFIER: kalimba.world
 
     steps:
-      - uses: actions/checkout@v3
+      # ───── Fetch code ──────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      # ───── Tooling ────────────────────────────────────────────────
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # ───── JS & Capacitor deps ────────────────────────────────────
       - name: Install npm deps & sync Capacitor
         run: |
           npm ci
           npx cap sync ios
 
+      # ───── CocoaPods ──────────────────────────────────────────────
       - name: Install CocoaPods deps
         run: |
           cd ios/App
           pod install
 
+      # ───── Import signing assets (no passphrase) ──────────────────
       - name: Decode & install signing assets
         run: |
-          # import .p12 (no password flag)
+          # certificate
           echo "$P12_BASE64" | base64 --decode > dist.p12
           security import dist.p12 \
             -k ~/Library/Keychains/login.keychain-db \
             -T /usr/bin/codesign
 
-          # install provisioning profile
+          # provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$MOBILEPROVISION_BASE64" \
             | base64 --decode \
             > ~/Library/MobileDevice/Provisioning\ Profiles/kalimba.mobileprovision
 
+      # ───── Build archive ──────────────────────────────────────────
       - name: Archive with xcodebuild
         run: |
           cd ios/App
@@ -56,6 +63,7 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="Kalimba Receptionist App" \
             archive
 
+      # ───── Export IPA ─────────────────────────────────────────────
       - name: Export IPA
         run: |
           cd ios/App
@@ -64,6 +72,7 @@ jobs:
             -exportOptionsPlist ExportOptions.plist \
             -exportPath build
 
+      # ───── Upload artifact ────────────────────────────────────────
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
